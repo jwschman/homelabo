@@ -1,0 +1,182 @@
+nextcloud:
+  image:
+    repository: nextcloud
+    flavor: apache
+    pullPolicy: IfNotPresent
+
+  ## Set cronjob
+  cronjob:
+    enabled: true 
+
+  ## Ingress config
+  ingress:
+    enabled: true
+    className: external
+    hosts:
+    - host: nextcloud.jwschman.com
+      paths:
+      - /
+    tls:
+    - hosts:
+      - nextcloud.jwschman.com
+    labels: {}
+    path: /
+    pathType: Prefix
+    annotations:
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/x-forwarded-proto: "https"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      kubernetes.io/tls-acme: "true"
+      cert-manager.io/cluster-issuer: letsencrypt-prod
+      nginx.ingress.kubernetes.io/enable-cors: "true"
+      nginx.ingress.kubernetes.io/cors-allow-headers: "X-Forwarded-For"
+
+      # Keep this in sync with the README.md:
+      nginx.ingress.kubernetes.io/server-snippet: |-
+        server_tokens off;
+        proxy_hide_header X-Powered-By;
+        rewrite ^/.well-known/webfinger /index.php/.well-known/webfinger last;
+        rewrite ^/.well-known/nodeinfo /index.php/.well-known/nodeinfo last;
+        rewrite ^/.well-known/host-meta /public.php?service=host-meta last;
+        rewrite ^/.well-known/host-meta.json /public.php?service=host-meta-json;
+        location = /.well-known/carddav {
+          return 301 $scheme://$host/remote.php/dav;
+        }
+        location = /.well-known/caldav {
+          return 301 $scheme://$host/remote.php/dav;
+        }
+        location = /robots.txt {
+          allow all;
+          log_not_found off;
+          access_log off;
+        }
+        location ~ ^/(?:build|tests|config|lib|3rdparty|templates|data)/ {
+          deny all;
+        }
+        location ~ ^/(?:autotest|occ|issue|indie|db_|console) {
+          deny all;
+        }
+
+  ## Actual nextcloud config
+  nextcloud:
+    host: nextcloud.jwschman.com
+    existingSecret:
+      enabled: true
+      secretName: nextcloud-config-secret
+      usernameKey: nextcloud-username
+      passwordKey: nextcloud-password
+    containerPort: 80
+    datadir: /var/www/html/data
+    trustedDomains:
+      - nextcloud.jwschman.com
+
+    ## Configs for Nextcloud's config.php (I think that's what it is called)
+    configs:
+      # Preserve source ip, force https, set maintenance window to start at 2AM, and set default phone region to JP
+      proxy.config.php: |-
+        <?php
+        $CONFIG = array (
+          'trusted_proxies' => array(
+            0 => '127.0.0.1',
+            1 => '10.0.0.0/8',
+            2 => '192.168.1.201',
+          ),
+          'overwritehost' => 'nextcloud.jwschman.com',
+          'overwriteprotocol' => 'https',
+          'overwrite.cli.url' => 'https://nextcloud.jwschman.com',
+          'forwarded_for_headers' => array('HTTP_X_FORWARDED_FOR'),
+
+          
+          'maintenance_window_start' => 2, 
+
+          'default_phone_region' => 'JP',
+
+          'trashbin_retention_obligation' => 'auto, 90',
+        );
+  
+  ## Set persistence
+  persistence:
+    # Nextcloud Data (/var/www/html)
+    enabled: true
+    existingClaim: "nextcloud-nextcloud"
+    # storageClass: "nfs-csi"
+    # accessMode: ReadWriteOnce
+    # size: 8Gi
+
+    ## Separate storage for actual data stored by nextcloud
+    nextcloudData:
+      enabled: true
+      existingClaim: "nextcloud-data"
+      # subPath: 
+      # annotations: {}
+      # storageClass: "nfs-csi"
+      # accessMode: ReadWriteOnce
+      # size: 100Gi
+
+  ## Disable internal database
+  internalDatabase:
+    enabled: false
+
+  externalDatabase:
+    enabled: true
+    type: postgresql
+
+    existingSecret:
+      enabled: true
+      secretName: nextcloud-db-secret
+      usernameKey: username
+      passwordKey: mariadb-password # I didn't update the key from original mariadb deployment, but it doesn't matter
+
+
+  ##
+  ## PostgreSQL chart configuration
+  ## for more options see https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+  ##
+  postgresql:
+    enabled: true
+    global:
+      postgresql:
+        auth:
+          existingSecret: "nextcloud-db-secret"
+          secretKeys:
+            # Still using the mariadb password keys here, but it's all the same
+            adminPasswordKey: "mariadb-root-password" 
+            userPasswordKey: "mariadb-password"
+            replicationPasswordKey: "mariadb-replication-password"
+    primary:
+      persistence:
+        enabled: true
+        existingClaim: "nextcloud-postgresql-0"
+        # storageClass: "nfs-csi" 
+
+  ##
+  ## Redis chart configuration
+  ## for more options see https://github.com/bitnami/charts/tree/main/bitnami/redis
+  ##
+  redis:
+    enabled: true
+    auth:
+      existingSecret: "nextcloud-db-secret"
+      existingSecretPasswordKey: "mariadb-password" # Just using the same as mariadb because why not
+    # Since Redis is used for caching only, you might want to use a storageClass with different reclaim policy and backup settings
+    # or just don't use it because it might be unnecessary since it's just cache?
+    master:
+      persistence:
+        enabled: false
+    replica:
+      persistence:
+        enabled: false
+
+  ## Service
+
+  service:
+    type: ClusterIP
+    port: 8080
+
+  ## Liveness Probes
+  ## Need to set these initial delays higher for first startup
+  livenessProbe:
+    # initialDelaySeconds: 300
+  readinessProbe:
+    # initialDelaySeconds: 300

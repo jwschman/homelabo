@@ -1,0 +1,183 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paperless-ngx
+  namespace: paperless
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: paperless-ngx
+  template:
+    metadata:
+      labels:
+        app: paperless-ngx
+    spec:
+      initContainers:
+      - name: wait-for-db
+        image: busybox:1.37
+        command: ['sh', '-c', 'until nc -z db 5432; do echo "Waiting for Postgres..."; sleep 5; done']
+        imagePullPolicy: IfNotPresent
+      containers:
+      - name: paperless-ngx
+        image: ghcr.io/paperless-ngx/paperless-ngx:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        # for Authentik support
+        - name: PAPERLESS_APPS
+          value: allauth.socialaccount.providers.openid_connect
+        - name: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+          valueFrom:
+            secretKeyRef:
+              name: paperless-ngx-secrets
+              key: PAPERLESS_SOCIALACCOUNT_PROVIDERS
+        # for Japanese support
+        - name: PAPERLESS_OCR_LANGUAGES
+          value: jpn
+        - name: PAPERLESS_OCR_LANGUAGE
+          value: eng+jpn
+        # still internal redis
+        - name: PAPERLESS_REDIS
+          value: redis://redis:6379
+        - name: PAPERLESS_DBHOST
+          value: db
+        - name: PAPERLESS_DBNAME
+          value: paperless
+        - name: PAPERLESS_DBUSER
+          value: paperless
+        - name: PAPERLESS_URL
+          value: https://paperless.pawked.com
+        - name: PAPERLESS_CSRF_TRUSTED_ORIGINS
+          value: https://paperless.pawked.com
+        - name: PAPERLESS_DBPASS
+          valueFrom:
+            secretKeyRef:
+              name: paperless-ngx-secrets
+              key: POSTGRES_PASSWORD
+        - name: PAPERLESS_ADMIN_USER
+          valueFrom:
+            secretKeyRef:
+              name: paperless-ngx-secrets
+              key: PAPERLESS_ADMIN_USER
+        - name: PAPERLESS_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: paperless-ngx-secrets
+              key: PAPERLESS_ADMIN_PASSWORD
+        ports:
+        - containerPort: 8000
+        volumeMounts:
+        - name: media
+          mountPath: /usr/src/paperless/media
+        - name: consume
+          mountPath: /usr/src/paperless/consume
+        startupProbe:
+          tcpSocket:
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          failureThreshold: 6
+        livenessProbe:
+          tcpSocket:
+            port: 8000
+        readinessProbe:
+          tcpSocket:
+            port: 8000
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "4Gi"
+            cpu: "2"
+      volumes:
+      - name: media
+        persistentVolumeClaim:
+          claimName: paperless-ngx-media
+      - name: consume
+        persistentVolumeClaim:
+          claimName: paperless-ngx-consume
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+  namespace: paperless
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: postgres:17.4
+        env:
+        - name: POSTGRES_DB
+          value: paperless
+        - name: POSTGRES_USER
+          value: paperless
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: paperless-ngx-secrets
+              key: POSTGRES_PASSWORD
+        ports:
+        - containerPort: 5432
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+        readinessProbe:
+          exec:
+            command:
+              - sh
+              - -c
+              - pg_isready -U postgres
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: paperless-ngx-postgres
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: paperless
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis:8
+        ports:
+        - containerPort: 6379
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "250m"

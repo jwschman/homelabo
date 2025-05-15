@@ -1,0 +1,49 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  labels:
+    longhornvolume: linkwarden-postgres
+  name: linkwarden-postgres
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: 2
+  disableFrontend: false
+  engineImage: longhornio/longhorn-engine:v1.8.1
+  frontend: blockdev
+  size: "536870912"
+  staleReplicaTimeout: 30
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: linkwarden-postgres
+spec:
+  capacity:
+    storage: 512Mi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: longhorn
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeAttributes:
+      numberOfReplicas: '2'
+      staleReplicaTimeout: '30'
+    volumeHandle: linkwarden-postgres
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: linkwarden-postgres
+  namespace: linkwarden
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 512Mi
+  volumeName: linkwarden-postgres
+  storageClassName: longhorn

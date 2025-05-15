@@ -1,0 +1,60 @@
+---
+# paperles-ngx service
+apiVersion: v1
+kind: Service
+metadata:
+  name: paperless-ngx
+  namespace: paperless
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: paperless-ngx
+---
+# paperless-ngx ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: paperless-ngx
+  namespace: paperless
+spec:
+  ingressClassName: internal
+  tls:
+  - hosts:
+    - paperless.pawked.com
+  rules:
+  - host: paperless.pawked.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: paperless-ngx
+            port:
+              number: 8000
+---
+# redis service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: paperless
+spec:
+  ports:
+  - port: 6379
+  selector:
+    app: redis
+---
+# postgres service
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  namespace: paperless
+spec:
+  ports:
+  - port: 5432
+  selector:
+    app: db

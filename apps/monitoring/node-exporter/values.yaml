@@ -1,0 +1,69 @@
+node-exporter:
+  # DaemonSet Configuration
+  daemonset:
+    enabled: true
+
+  # Expose the service to the host network (default true)
+  hostNetwork: true
+
+  # Service Configuration
+  service:
+    enabled: true
+    type: ClusterIP
+
+  # Pod Security
+  securityContext:
+    runAsUser: 65534  # nobody user
+    runAsGroup: 65534
+    fsGroup: 65534
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Resource Limits (Adjust as needed)
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "128Mi"
+
+  # Extra Arguments to Enable Additional Collectors
+  extraArgs:
+    - --collector.filesystem
+    - --collector.cpu
+    - --collector.thermal_zone
+    - --collector.meminfo
+    - --collector.netdev
+    - --collector.loadavg
+
+    ## from https://devopscube.com/node-exporter-kubernetes/
+    - --path.sysfs=/host/sys
+    - --path.rootfs=/host/root
+    - --path.procfs=/host/proc
+    - --no-collector.wifi
+    - --no-collector.hwmon
+    - --collector.filesystem.ignored-mount-points=^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/pods/.+)($|/)
+    - --collector.netclass.ignored-devices=^(veth.*)$
+
+
+  # Tolerations for control plane
+  tolerations:
+    - key: "node-role.kubernetes.io/control-plane"
+      operator: "Exists"
+      effect: "NoSchedule"
+
+  ## Additional mounts from the host to node-exporter container
+  extraHostVolumeMounts:
+  - name: proc
+    hostPath: /proc
+    mountPath: /host/proc
+    readOnly: true
+  - name: sys
+    hostPath: /sys
+    mountPath: /host/sys
+    readOnly: true
+  - name: rootfs
+    hostPath: /
+    mountPath: /host/root
+    readOnly: true

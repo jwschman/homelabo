@@ -1,0 +1,27 @@
+grafana:
+
+  admin:
+    existingSecret: "grafana-secrets"
+
+  deploymentStrategy:
+    type: Recreate
+  
+  ingress:
+    enabled: true
+    ingressClassName: internal
+    hosts:
+      - grafana.pawked.com
+
+  persistence:
+    enabled: true
+    existingClaim: grafana
+
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          type: prometheus
+          url: https://prometheus.pawked.com
+          access: proxy
+          isDefault: true

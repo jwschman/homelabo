@@ -1,0 +1,49 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  labels:
+    longhornvolume: <<<VOLUME NAME>>>   # Set name
+  name: <<<VOLUME NAME>>>               ## Edit to match name
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: 2
+  disableFrontend: false
+  engineImage: longhornio/longhorn-engine:v1.8.1 # Edit as updates are released
+  frontend: blockdev
+  size: "536870912"                     # Size in bytes from this site: https://www.convertunits.com/from/bits/to/Mib
+  staleReplicaTimeout: 30
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: <<<VOLUME NAME>>>               # Edit to match name
+spec:
+  capacity:
+    storage: 512Mi                      # Edit to match size
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: longhorn
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeAttributes:
+      numberOfReplicas: '2'
+      staleReplicaTimeout: '30'
+    volumeHandle: <<<VOLUME NAME>>>
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: <<<VOLUME NAME>>>               # Edit to match name
+  namespace: <<<NAMESPACE>>>            # Edit to match namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 512Mi                    # Edit to match size
+  volumeName: <<<VOLUME NAME>>>         # Edit to match volume name
+  storageClassName: longhorn

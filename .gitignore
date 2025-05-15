@@ -1,0 +1,2 @@
+argocd-init/values.yaml
+cluster/external-secrets/templates/vault-backend.yaml

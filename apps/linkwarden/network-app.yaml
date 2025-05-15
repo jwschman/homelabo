@@ -1,0 +1,35 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: linkwarden
+  namespace: linkwarden
+spec:
+  selector:
+    app: linkwarden
+  type: ClusterIP
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: linkwarden
+  namespace: linkwarden
+spec:
+  ingressClassName: internal
+  tls:
+  - hosts:
+    - linkwarden.pawked.com
+  rules:
+  - host: linkwarden.pawked.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: linkwarden
+            port:
+              number: 80

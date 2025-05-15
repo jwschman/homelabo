@@ -1,0 +1,21 @@
+ingress-nginx:
+  controller:
+    allowSnippetAnnotations: true # Added for nextcloud and authentik
+    electionID: ingress-controller-leader
+    ingressClass: internal
+    ingressClassResource:
+      name: internal
+      enabled: true
+      default: true # Internal should be the default ingress class
+      controllerValue: "k8s.io/internal-ingress-nginx"
+    config:
+      annotations-risk-level: "Critical"
+      strict-validate-path-type: "false"
+      use-forwarded-headers: "true"
+      ##
+      # whitelist-source-range: "127.0.0.1/32,192.168.0.0/16"
+    extraArgs:
+      default-ssl-certificate: cert-manager/pawked-wildcard-cert-secret # Allows me to not need to set secret in each ingress
+      enable-ssl-passthrough: "true"
+    service:
+      loadBalancerIP: "192.168.1.202"     # IP Address to request from MetalLB

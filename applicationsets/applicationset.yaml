@@ -1,0 +1,46 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: home-server
+  namespace: argocd
+spec:
+  goTemplate: true
+  generators:
+  - git:
+      repoURL: git@github.com:jwschman/homelabo.git
+      revision: HEAD
+      directories:
+      - path: apps/media/*
+      - path: apps/argocd
+      - path: apps/nextcloud
+      - path: apps/monitoring/*
+      - path: apps/wordpress
+      - path: apps/redmine
+      - path: apps/homepage
+      - path: apps/linkding
+      - path: apps/external-zero-trust/*
+      - path: apps/gotify
+      - path: apps/commafeed
+      - path: apps/linkwarden
+      - path: apps/paperless
+      - path: apps/redis
+      # - path: testing/*
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      project: "default"
+      source:
+        repoURL: git@github.com:jwschman/homelabo.git
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{index .path.segments 1}}'
+      syncPolicy:
+        syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
+        automated:
+          selfHeal: false
+          prune: true

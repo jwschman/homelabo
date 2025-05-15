@@ -1,0 +1,40 @@
+redmine:
+
+  updateStrategy:
+    type: Recreate
+    rollingUpdate: null # needed to override default value
+
+  existingSecret: "redmine-secret"
+
+  service:
+    type: ClusterIP
+  
+  ingress:
+    enabled: true
+    ingressClassName: "internal"
+    hostname: redmine.pawked.com
+
+  persistence:
+    enabled: true
+    existingClaim: redmine-data
+    storageClass: longhorn-static
+
+  databaseType: postgresql
+
+  mariadb:
+    enabled: false 
+
+  postgresql:
+    enabled: true
+    primary:
+      persistence:
+        existingClaim: redmine-postgresql-0
+        storageClass: longhorn-static
+    updateStrategy:
+      type: Recreate
+
+  resources:
+    limits: {}
+    requests:
+      memory: 128Mi
+      cpu: 50m

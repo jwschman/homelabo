@@ -1,0 +1,49 @@
+wordpress:
+
+  updateStrategy:
+    type: Recreate
+
+  persistence:
+    enabled: true
+    existingClaim: "wordpress-wordpress"
+    storageClass: "longhorn-static"
+
+  ingress:
+    enabled: true
+    ingressClassName: "internal"
+    hostname: wordpress.pawked.com
+        
+  memcached:
+    enabled: false
+
+  wordpressUsername: john
+
+  existingSecret: "wordpress-secrets"
+
+  mariadb:
+    enabled: true
+    primary:
+      persistence:
+        enabled: true
+        existingClaim: "wordpress-mariadb-0"
+        storageClass: "longhorn-static"
+
+    auth:
+      existingSecret: wordpress-mariadb-secret
+      username: bn_wordpress
+      database: bitnami_wordpress
+
+  
+  service:
+    type: ClusterIP
+
+  ## WordPress containers' resource requests and limits
+  ## ref: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/
+  ## @param resourcesPreset Set container resources according to one common preset (allowed values: none, nano, micro, small, medium, large, xlarge, 2xlarge). This is ignored if resources is set (resources is recommended for production).
+  ## More information: https://github.com/bitnami/charts/blob/main/bitnami/common/templates/_resources.tpl#L15
+  ##
+  resourcesPreset: "micro"
+
+  # don't need poddisruptionbudget
+  pdb:
+    create: false

@@ -1,0 +1,37 @@
+external-dns:
+
+  provider:
+    name: cloudflare
+
+  env:
+    - name: CF_API_TOKEN
+      valueFrom:
+        secretKeyRef:
+          name: cloudflare-api-token
+          key: token
+
+  serviceAccount:
+    create: true
+
+  service:
+    annotations: {}
+    port: 7979
+
+
+  rbac:
+    create: true
+
+  deploymentStrategy:
+    type: Recreate
+
+  # -- _Kubernetes_ resources to monitor for DNS entries.
+  sources:
+    - service
+    - ingress
+
+  # -- How DNS records are synchronized between sources and providers; available values are `sync` & `upsert-only`.
+  policy: upsert-only  # @schema enum:[sync, upsert-only]; type:string; default: "upsert-only"
+
+  # -- Intentionally exclude domains from being managed.
+  excludeDomains: 
+    - jwschman.com

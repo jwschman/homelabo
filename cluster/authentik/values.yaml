@@ -1,0 +1,52 @@
+authentik:
+  authentik:
+    secret_key: file:///authentik-secrets/secret_key
+    # This sends anonymous usage-data, stack traces on errors and
+    # performance data to authentik.error-reporting.a7k.io, and is fully opt-in
+    error_reporting:
+      enabled: false
+    postgresql:
+      password: file:///authentik-secrets/postgres-password
+    # external redis
+    redis:
+      host: redis-master.redis.svc.cluster.local
+      password: file:///authentik-secrets/redis-password
+
+  server:
+    ingress:
+      enabled: true
+      ingressClassName: internal
+      hosts:
+        - auth.pawked.com
+
+    volumes:
+      - name: authentik-secrets
+        secret:
+          secretName: authentik-secrets
+    volumeMounts:
+      - name: authentik-secrets
+        mountPath: /authentik-secrets
+        readOnly: true
+
+  worker:
+    volumes:
+      - name: authentik-secrets
+        secret:
+          secretName: authentik-secrets
+    volumeMounts:
+      - name: authentik-secrets
+        mountPath: /authentik-secrets
+        readOnly: true
+
+  postgresql:
+    enabled: true
+    auth:
+      existingSecret: authentik-secrets
+      secretKeys:
+        adminPasswordKey: postgres-admin-password
+        userPasswordKey: postgres-password
+        replicationPasswordKey: postgres-replication-password
+    primary:
+      persistence:
+        enabled: true
+        existingClaim: "authentik-postgresql"

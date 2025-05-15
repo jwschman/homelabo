@@ -1,0 +1,10 @@
+apiVersion: v2
+name: smartctl-exporter
+description: smartctl-exporter from prometheus community charts
+type: application
+version: 1.0.0
+appVersion: v0.13.0
+dependencies:
+- name: prometheus-smartctl-exporter
+  version: 0.15.1
+  repository: https://prometheus-community.github.io/helm-charts

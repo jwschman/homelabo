@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app.kubernetes.io/name: truenas-graphite-exporter
+  name: truenas-graphite-exporter
+  namespace: monitoring
+data:
+  # TODO: regex can be improved to reduce amount of mappings
+  graphite_mapping.yaml: |-
+    mappings:

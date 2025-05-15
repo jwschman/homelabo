@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: longhorn-debug
+#   namespace: monitoring # DON'T FORGET THIS ONE
+spec:
+  containers:
+    - name: debug
+      image: busybox
+      command: [ "sleep", "3600" ]
+      volumeMounts:
+        - mountPath: "/longhorn-data"
+          name: data
+  volumes:
+    - name: data
+      persistentVolumeClaim:
+        claimName: backup-test # AND THIS ONE
+  restartPolicy: Never

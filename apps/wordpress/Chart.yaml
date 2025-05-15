@@ -1,0 +1,10 @@
+apiVersion: v2
+name: wordpress
+description: A Helm chart for WordPress
+type: application
+version: 1.0.0
+appVersion: 6.7.2
+dependencies:
+  - name: wordpress
+    version: 24.2.5
+    repository: https://charts.bitnami.com/bitnami

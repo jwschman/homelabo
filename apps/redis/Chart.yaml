@@ -1,0 +1,10 @@
+apiVersion: v2
+name: redis
+description: A Helm chart for redis
+type: application
+version: v1.0.0
+appVersion: 8.0.0
+dependencies:
+- name: redis
+  version: 21.0.2
+  repository: https://charts.bitnami.com/bitnami

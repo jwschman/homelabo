@@ -1,0 +1,71 @@
+argo-cd:
+## ArgoCD Helm chart configuration
+
+  # Global configuration
+  global:
+    domain: argocd.pawked.com
+    deploymentStrategy:
+      type: Recreate
+
+  # Configuration for ArgoCD repositories and credentials
+  configs:
+
+    # Set password for server
+    secret:
+      createSecret: false
+
+    # needed for ssl termination
+    params:
+      server.insecure: true
+
+    # rbac
+    rbac:
+      policy.csv: |
+        g, readonly, role:readonly
+        g, john, role:admin
+        
+    # ConfigMap
+    cm:
+      create: true
+      accounts.john: apiKey, login
+      accounts.readonly: apiKey # create readonly account for homepage
+      # Custom resource health configuration for deployment waves
+      data:
+        resource.customizations: |
+          argoproj.io/Application:
+            health.lua: |
+              hs = {}
+              hs.status = "Progressing"
+              hs.message = ""
+              if obj.status ~= nil then
+                if obj.status.health ~= nil then
+                  hs.status = obj.status.health.status
+                  if obj.status.health.message ~= nil then
+                    hs.message = obj.status.health.message
+                  end
+                end
+              end
+              return hs
+
+
+
+  server:
+    # ArgoCD server service configuration
+    service:
+      type: ClusterIP
+      # type: NodePort
+      # NodePort: 30080
+
+    # enable ingress
+    ingress:
+      enabled: true
+      ingressClassName: "internal"
+      extraTls:
+        - hosts:
+          - argocd.pawked.com
+          
+      # annotations needed for ingress-nginx
+      annotations:
+        nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+        nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+        # nginx.ingress.kubernetes.io/ssl-passthrough: "true"

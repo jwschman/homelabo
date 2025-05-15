@@ -1,0 +1,60 @@
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: paperless-rclone-move
+  namespace: paperless
+spec:
+  schedule: "*/5 * * * *" # every 5 minutes
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: Never
+          affinity:
+            podAffinity: # keep it on the pod that is running paperless
+              requiredDuringSchedulingIgnoredDuringExecution:
+                - labelSelector:
+                    matchLabels:
+                      app: paperless-ngx
+                  topologyKey: kubernetes.io/hostname 
+          containers:
+            - name: rclone-move
+              image: rclone/rclone:1.69.2
+              imagePullPolicy: IfNotPresent
+              args:
+                - move
+                - nextcloud:/Paperless/
+                - /consume/
+                - --transfers=1
+                - --checkers=1
+                - --no-traverse
+                - --retries=3
+                - --log-level=INFO
+              env:
+                - name: RCLONE_CONFIG_NEXTCLOUD_TYPE
+                  value: webdav
+                - name: RCLONE_CONFIG_NEXTCLOUD_URL
+                  valueFrom:
+                    secretKeyRef:
+                      name: paperless-rclone-secrets
+                      key: NEXTCLOUD_URL
+                - name: RCLONE_CONFIG_NEXTCLOUD_VENDOR
+                  value: nextcloud
+                - name: RCLONE_CONFIG_NEXTCLOUD_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: paperless-rclone-secrets
+                      key: NEXTCLOUD_USER
+                - name: RCLONE_CONFIG_NEXTCLOUD_PASS
+                  valueFrom:
+                    secretKeyRef:
+                      name: paperless-rclone-secrets
+                      key: NEXTCLOUD_PASS
+              volumeMounts:
+                - name: consume
+                  mountPath: /consume
+          volumes:
+            - name: consume
+              persistentVolumeClaim:
+                claimName: paperless-ngx-consume
