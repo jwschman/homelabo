@@ -4,16 +4,16 @@
 
 | App | Enabled? | Note |
 |---|---|---|
-| ArgoCD | ❓ | Still considering if I should enable it |
 | Linkwarden | ✅ | Integrated using OAuth2 |
-| Grafana | ❌ | Not implemented yet |
+| Grafana | ✅ | Integrated using OAuth2 |
 | Uptime-kuma | ✅ | Integrated using Proxy Provider |
-| Nextcloud | ❓ | Also wondering if I should enable |
 | Paperless | ✅ | Integrated using OAuth2 |
 | Redmine | ❌ | Not yet... might be a hassle from what I've seen online |
 | Wordpress | ❌ | Not implemented yet |
-| Hashicorp Vault | ❓ | Not sure if it makes sense to set this up with Authentik |
 | TrueNAS | ❌ | Not really supported on TrueNAS Core, but maybe I can find a workaround (or finally update to SCALE) |
+| ArgoCD | ❓ | Still considering if I should enable it |
+| Nextcloud | ❓ | Also wondering if I should enable |
+| Hashicorp Vault | ❓ | Not sure if it makes sense to set this up with Authentik |
 
 **Legend:**  
 ✅ = Enabled  
@@ -21,6 +21,10 @@
 ❓ = Undecided  
 
 ## Activity Log
+
+### 5/16/2025
+
+Added Grafana to Authentik following this guide: <https://docs.goauthentik.io/integrations/services/grafana/>.  The only issue I had was that I hadn't actually assigned an email address to my user in Authentik and that was causing the signup in grafana to fail.  Once I added that it worked perfectly.
 
 ### 5/14/2025
 

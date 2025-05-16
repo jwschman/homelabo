@@ -1,5 +1,27 @@
 grafana:
 
+  env: # used from https://docs.goauthentik.io/integrations/services/grafana/
+    GF_AUTH_GENERIC_OAUTH_ENABLED: "true"
+    GF_AUTH_GENERIC_OAUTH_NAME: authentik
+    GF_AUTH_GENERIC_OAUTH_SCOPES: "openid profile email"
+    GF_AUTH_GENERIC_OAUTH_AUTH_URL: "https://auth.pawked.com/application/o/authorize/"
+    GF_AUTH_GENERIC_OAUTH_TOKEN_URL: "https://auth.pawked.com/application/o/token/"
+    GF_AUTH_GENERIC_OAUTH_API_URL: "https://auth.pawked.com/application/o/userinfo/"
+    GF_AUTH_SIGNOUT_REDIRECT_URL: "https://auth.pawked.com/application/o/grafana/end-session/"
+    GF_AUTH_OAUTH_AUTO_LOGIN: "true"
+    GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'"
+    GF_SERVER_ROOT_URL: "https://grafana.pawked.com"
+
+  envValueFrom:
+    GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
+      secretKeyRef:
+        name: grafana-secrets
+        key: authentik-client-id
+    GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET:
+      secretKeyRef:
+        name: grafana-secrets
+        key: authentik-client-secret
+
   admin:
     existingSecret: "grafana-secrets"
 
