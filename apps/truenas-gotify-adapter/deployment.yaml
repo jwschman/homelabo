@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: truenas-gotify-adapter
+  namespace: truenas-gotify-adapter
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: truenas-gotify-adapter
+  template:
+    metadata:
+      labels:
+        app: truenas-gotify-adapter
+    spec:
+      containers:
+      - name: truenas-gotify-adapter
+        image: jwschman/truenas-gotify:main
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 31662
+        env:
+        - name: GOTIFY_URL
+          value: "https://gotify.pawked.com/message"
+        - name: LISTEN_HOST
+          value: "0.0.0.0"
+        - name: LISTEN_PORT
+          value: "31662"
+        envFrom:
+          - secretRef:
+              name: truenas-gotify-adapter-secrets

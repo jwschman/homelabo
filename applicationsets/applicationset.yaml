@@ -7,7 +7,7 @@ spec:
   goTemplate: true
   generators:
   - git:
-      repoURL: git@github.com:jwschman/homelabo.git
+      repoURL: git@github.com:jwschman/argocd.git
       revision: HEAD
       directories:
       - path: apps/media/*
@@ -24,6 +24,7 @@ spec:
       - path: apps/linkwarden
       - path: apps/paperless
       - path: apps/redis
+      - path: apps/truenas-gotify-adapter
       # - path: testing/*
   template:
     metadata:
@@ -31,7 +32,7 @@ spec:
     spec:
       project: "default"
       source:
-        repoURL: git@github.com:jwschman/homelabo.git
+        repoURL: git@github.com:jwschman/argocd.git
         targetRevision: HEAD
         path: '{{.path.path}}'
       destination:
