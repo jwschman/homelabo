@@ -25,6 +25,7 @@ spec:
       - path: apps/paperless
       - path: apps/redis
       - path: apps/truenas-gotify-adapter
+      - path: apps/freshrss
       # - path: testing/*
   template:
     metadata:
