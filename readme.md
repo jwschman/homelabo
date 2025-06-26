@@ -89,6 +89,10 @@ There are a few pieces of hardware and services that are used by the cluster but
 - [**Dousojin**](https://en.wikipedia.org/wiki/D%C5%8Dsojin): A Raspberry Pi 3B+ running Docker.  It hosts [**Hashicorp Vault**](https://github.com/hashicorp/vault) which HomeLabo relies on for external secrets.
 - **Central Bureaucracy**: An Ubuntu VM hosted on **TrueNAS** used for central management of everything.  Kubectl, Helm, Vault CLI, Argo CLI and others can all be run from here.
 
+### Storage and Secret Flow
+
+![Storage and Secret Flow](images/homelabo-storage-and-secret%20flow.png)
+
 ## Installed Apps
 
 Everything is installed and managed with ArgoCD through Applications in the [applicationsets](/applicationsets) directory.
@@ -98,6 +102,10 @@ Everything is installed and managed with ArgoCD through Applications in the [app
 This is an ArgoCD "[app-of-apps](https://argo-cd.readthedocs.io/en/stable/operator-manual/cluster-bootstrapping/)" containing all of the infrastructure components used by the cluster.
 
 <table>
+    <tr>
+        <td><a href="https://github.com/cert-manager/cert-manager">authentik</a></td>
+        <td>Open-source Identity Provider</td>
+    </tr>
     <tr>
         <td><a href="https://github.com/cert-manager/cert-manager">cert-manager</a></td>
         <td>Automatic generation and renewal of TLS certificates</td>
@@ -139,20 +147,40 @@ This is the ArgoCD ApplicationSet used to deploy everything in the apps director
         <td>Helm chart for ArgoCD to manage itself</td>
     </tr>
     <tr>
+        <td>gotify</td>
+        <td>Gotify centralized notifications</td>
+    </tr>
+    <tr>
+        <td>linkwarden</td>
+        <td>Webpage saving</td>
+    </tr>
+    <tr>
         <td>monitoring</td>
         <td>Contains charts for grafana, node-exporter, prometheus, smartctl-exporter, truenas-graphite-exporter and uptime-kuma</td>
     </tr>
     <tr>
         <td>nextcloud</td>
-        <td>Helm chart for NextCloud</td>
+        <td>Cloud file storage</td>
+    </tr>
+    <tr>
+        <td>paperless</td>
+        <td>Document storage</td>
+    </tr>
+    <tr>
+        <td>redis</td>
+        <td>Centralized redis server</td>
     </tr>
     <tr>
         <td>redmine</td>
-        <td>Helm chart for Redmine</td>
+        <td>Issue tracking</td>
+    </tr>
+    <tr>
+        <td>truenas-gotify-adapter</td>
+        <td>TrueNAS notifications in Gotify</td>
     </tr>
     <tr>
         <td>wordpress</td>
-        <td>Helm chart for Wordpress</td>
+        <td>Personal writing</td>
     </tr>
 </table>
 
