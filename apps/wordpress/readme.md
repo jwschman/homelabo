@@ -4,6 +4,6 @@ I use an internal only WordPress instance basically as a journal that I keep for
 
 ## Notes
 
-### Missing Longhorn Volume
+9/24/2025
 
-I set up WordPress before I began using declarative volumes in Longhorn so it does not yet have its own `storage.yaml`.
+Migrated from Bitnami Helm chart to official images

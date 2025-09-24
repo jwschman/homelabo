@@ -1,0 +1,53 @@
+---
+# MariaDB service
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-mariadb-svc
+  labels:
+    app: wordpress-mariadb
+spec:
+  ports:
+  - port: 3306
+    name: tcp-mariadb
+  selector:
+    app: wordpress-mariadb
+---
+# WordPress service
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress-wordpress-svc
+spec:
+  selector:
+    app: wordpress
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+---
+# WordPress Ingress
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wordpress
+  namespace: wordpress
+spec:
+  ingressClassName: internal
+  tls:
+  - hosts:
+    - wordpress.pawked.com
+  rules:
+  - host: wordpress.pawked.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: wordpress-wordpress-svc
+            port:
+              number: 80

@@ -1,0 +1,51 @@
+---
+##
+## MariaDB StatefulSet for Wordpress
+##
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: wordpress-mariadb
+spec:
+  selector:
+    matchLabels:
+      app: wordpress-mariadb
+  serviceName: "wordpress-svc"
+  replicas: 1
+  minReadySeconds: 10
+  template:
+    metadata:
+      labels:
+        app: wordpress-mariadb
+    spec:
+      terminationGracePeriodSeconds: 10
+
+      containers:
+      - name: mariadb
+        image: mariadb:11.8
+        envFrom:
+          - secretRef:
+              name: wordpress-mariadb-secrets
+        ports:
+        - containerPort: 3306
+          name: tcp-mariadb
+
+        resources:
+          limits:
+            cpu: 375m
+            ephemeral-storage: 2Gi
+            memory: 384Mi
+          requests:
+            cpu: 250m
+            ephemeral-storage: 50Mi
+            memory: 256Mi
+
+        volumeMounts:
+        - name: wordpress-mariadb-data
+          mountPath: /var/lib/mysql
+
+      volumes:
+        - name: wordpress-mariadb-data
+          persistentVolumeClaim:
+            claimName: wordpress-mariadb-data

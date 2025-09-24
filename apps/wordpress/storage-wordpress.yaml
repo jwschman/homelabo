@@ -1,0 +1,48 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  labels:
+    longhornvolume: wordpress-wordpress-data   # Set name
+  name: wordpress-wordpress-data               ## Edit to match name
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: 2
+  disableFrontend: false
+  frontend: blockdev
+  size: "5368709120"                     # Size in bytes from this site: https://www.convertunits.com/from/bits/to/Mib
+  staleReplicaTimeout: 30
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wordpress-wordpress-data               # Edit to match name
+spec:
+  capacity:
+    storage: 5Gi                      # Edit to match size
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: longhorn
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeAttributes:
+      numberOfReplicas: '2'
+      staleReplicaTimeout: '30'
+    volumeHandle: wordpress-wordpress-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-wordpress-data               # Edit to match name
+  namespace: wordpress           # Edit to match namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi                    # Edit to match size
+  volumeName: wordpress-wordpress-data         # Edit to match volume name
+  storageClassName: longhorn

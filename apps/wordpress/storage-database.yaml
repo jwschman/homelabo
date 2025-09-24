@@ -1,0 +1,48 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  labels:
+    longhornvolume: wordpress-mariadb-data   # Set name
+  name: wordpress-mariadb-data               ## Edit to match name
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: 2
+  disableFrontend: false
+  frontend: blockdev
+  size: "5368709120"                     # Size in bytes from this site: https://www.convertunits.com/from/bits/to/Mib
+  staleReplicaTimeout: 30
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: wordpress-mariadb-data               # Edit to match name
+spec:
+  capacity:
+    storage: 5Gi                      # Edit to match size
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: longhorn
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeAttributes:
+      numberOfReplicas: '2'
+      staleReplicaTimeout: '30'
+    volumeHandle: wordpress-mariadb-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: wordpress-mariadb-data               # Edit to match name
+  namespace: wordpress           # Edit to match namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi                    # Edit to match size
+  volumeName: wordpress-mariadb-data         # Edit to match volume name
+  storageClassName: longhorn
