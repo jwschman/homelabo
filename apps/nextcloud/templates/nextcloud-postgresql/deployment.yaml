@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nextcloud-postgresql
+spec:
+  selector:
+    matchLabels:
+      app: nextcloud-postgresql
+  replicas: 1
+  revisionHistoryLimit: 5
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: nextcloud-postgresql
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:17
+        ports:
+        - containerPort: 5432
+          name: tcp-postgres
+        
+        resources:
+          limits:
+            cpu: 200m
+            ephemeral-storage: 2Gi
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            ephemeral-storage: 50Mi
+            memory: 128Mi
+
+        env:
+        - name: PGDATA # Because Longhorn
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_DB
+          value: nextcloud
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-db-secret
+              key: username
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: nextcloud-db-secret
+              key: mariadb-password
+        
+        volumeMounts:
+        - name: nextcloud-postgres-data
+          mountPath: /var/lib/postgresql/data
+
+      volumes:
+        - name: nextcloud-postgres-data
+          persistentVolumeClaim:
+            claimName: nextcloud-postgres-data

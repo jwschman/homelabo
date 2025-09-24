@@ -118,58 +118,70 @@ nextcloud:
   internalDatabase:
     enabled: false
 
+  ## PostgreSQL chart configuration
+  postgresql:
+    enabled: false
+    # global:
+    #   postgresql:
+    #     auth:
+    #       existingSecret: "nextcloud-db-secret"
+    #       secretKeys:
+    #         # Still using the mariadb password keys here, but it's all the same
+    #         adminPasswordKey: "mariadb-root-password" 
+    #         userPasswordKey: "mariadb-password"
+    #         replicationPasswordKey: "mariadb-replication-password"
+    # primary:
+    #   persistence:
+    #     enabled: true
+    #     existingClaim: "nextcloud-postgresql-0"
+
   externalDatabase:
     enabled: true
     type: postgresql
-
+    host: nextcloud-postgresql-svc
+    database: nextcloud
     existingSecret:
       enabled: true
       secretName: nextcloud-db-secret
       usernameKey: username
-      passwordKey: mariadb-password # I didn't update the key from original mariadb deployment, but it doesn't matter
+      passwordKey: mariadb-password  # I didn't update the key from original mariadb deployment, but it doesn't matter
 
-
-  ##
-  ## PostgreSQL chart configuration
-  ## for more options see https://github.com/bitnami/charts/tree/main/bitnami/postgresql
-  ##
-  postgresql:
-    enabled: true
-    global:
-      postgresql:
-        auth:
-          existingSecret: "nextcloud-db-secret"
-          secretKeys:
-            # Still using the mariadb password keys here, but it's all the same
-            adminPasswordKey: "mariadb-root-password" 
-            userPasswordKey: "mariadb-password"
-            replicationPasswordKey: "mariadb-replication-password"
-    primary:
-      persistence:
-        enabled: true
-        existingClaim: "nextcloud-postgresql-0"
-        # storageClass: "nfs-csi" 
-
-  ##
   ## Redis chart configuration
-  ## for more options see https://github.com/bitnami/charts/tree/main/bitnami/redis
-  ##
   redis:
+    enabled: false
+    # auth:
+    #   existingSecret: "nextcloud-db-secret"
+    #   existingSecretPasswordKey: "mariadb-password" # Just using the same as mariadb because why not
+    # # Since Redis is used for caching only, you might want to use a storageClass with different reclaim policy and backup settings
+    # # or just don't use it because it might be unnecessary since it's just cache?
+    # master:
+    #   persistence:
+    #     enabled: false
+    # replica:
+    #   persistence:
+    #     enabled: false
+
+  ##
+  ## External Redis configuration
+  ##
+  externalRedis:
     enabled: true
-    auth:
-      existingSecret: "nextcloud-db-secret"
-      existingSecretPasswordKey: "mariadb-password" # Just using the same as mariadb because why not
-    # Since Redis is used for caching only, you might want to use a storageClass with different reclaim policy and backup settings
-    # or just don't use it because it might be unnecessary since it's just cache?
-    master:
-      persistence:
-        enabled: false
-    replica:
-      persistence:
-        enabled: false
 
+    ## Redis host
+    host: "redis-svc.redis.svc.cluster.local"
+
+    ## Redis port
+    port: "6379"
+
+    ## Use a existing secret
+    existingSecret:
+      enabled: true
+      secretName: nextcloud-redis-secrets
+      passwordKey: password
+
+  ##
   ## Service
-
+  ##
   service:
     type: ClusterIP
     port: 8080

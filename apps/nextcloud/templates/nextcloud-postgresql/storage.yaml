@@ -1,0 +1,48 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: Volume
+metadata:
+  labels:
+    longhornvolume: nextcloud-postgres-data   # Set name
+  name: nextcloud-postgres-data               ## Edit to match name
+  namespace: longhorn-system
+spec:
+  numberOfReplicas: 2
+  disableFrontend: false
+  frontend: blockdev
+  size: "21474836480"                     # Size in bytes from this site: https://www.convertunits.com/from/bits/to/Mib
+  staleReplicaTimeout: 30
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nextcloud-postgres-data               # Edit to match name
+spec:
+  capacity:
+    storage: 20Gi                     # Edit to match size
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: longhorn
+  csi:
+    driver: driver.longhorn.io
+    fsType: ext4
+    volumeAttributes:
+      numberOfReplicas: '2'
+      staleReplicaTimeout: '30'
+    volumeHandle: nextcloud-postgres-data
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: nextcloud-postgres-data               # Edit to match name
+  namespace: nextcloud          # Edit to match namespace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi                   # Edit to match size
+  volumeName: nextcloud-postgres-data        # Edit to match volume name
+  storageClassName: longhorn
