@@ -1,0 +1,10 @@
+apiVersion: v2
+name: external-prometheus
+description: prometheus community helm release
+type: application
+version: 1.0.0
+appVersion: "v3.1.0"
+dependencies:
+- name: prometheus
+  version: 27.20.0
+  repository: https://prometheus-community.github.io/helm-charts

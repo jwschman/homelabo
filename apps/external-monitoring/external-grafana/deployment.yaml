@@ -1,0 +1,80 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: external-grafana
+  name: external-grafana
+spec:
+  selector:
+    matchLabels:
+      app: external-grafana
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: external-grafana
+    spec:
+      containers:
+        - name: external-grafana
+          image: grafana/grafana:12.2.0
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: external-grafana-env
+            # - secretRef:
+            #     name: external-grafana-secrets
+          ports:
+            - containerPort: 3000
+              name: http-grafana
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /robots.txt
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            successThreshold: 1
+            timeoutSeconds: 2
+          livenessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 3000
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 150m
+              memory: 150Mi
+            limits:
+              cpu: 250m
+              memory: 250Mi
+          volumeMounts:
+            - name: external-grafana-datasources
+              mountPath: /etc/grafana/provisioning/datasources
+            - name: grafana-config
+              mountPath: /etc/grafana/grafana.ini
+              subPath: grafana.ini
+            - name: dashboards-provisioning
+              mountPath: /etc/grafana/provisioning/dashboards
+            - name: grafana-dashboards
+              mountPath: /var/lib/grafana/dashboards
+
+      volumes:
+        - name: external-grafana-datasources
+          configMap:
+            name: external-grafana-datasources
+        - name: grafana-config
+          configMap:
+            name: grafana-config
+        - name: dashboards-provisioning
+          configMap:
+            name: grafana-dashboards-provisioning
+        - name: grafana-dashboards
+          configMap:
+            name: grafana-dashboard

@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: external-grafana-env
+data:
+  # GF_LOG_LEVEL: "warn"
+  # GF_SERVER_ROOT_URL: http://monitoring.pawked.com:3000
+  # GF_FEATURE_TOGGLES_ENABLE: "provisioning,kubernetesDashboards"
+  GF_ANALYTICS_ENABLED: "false"
+  GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+  GF_ANALYTICS_FEEDBACK_LINKS_ENABLED: "false"
