@@ -1,0 +1,23 @@
+# external grafana redirect root to kiosk
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-root-to-kiosk
+  namespace: external-monitoring
+spec:
+  redirectRegex:
+    regex: "^(https?://[^/]+)/$"
+    replacement: "${1}/?kiosk"
+    permanent: true
+---
+# internal grafana redirect admin and user-facing pages
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: redirect-admin-to-kiosk
+  namespace: external-monitoring
+spec:
+  redirectRegex:
+    regex: "^(https?://[^/]+)/(login|signup|admin|profile|org|dashboard|datasources|plugins|users|teams|playlists|alerting|explore|d/).*"
+    replacement: "${1}/?kiosk"
+    permanent: true  # 301 redirect (matches nginx "return 301")

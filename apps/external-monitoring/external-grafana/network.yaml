@@ -10,37 +10,74 @@ spec:
       targetPort: http-grafana
   selector:
     app: external-grafana
+# ---
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: external-grafana
+#   namespace: external-monitoring
+#   annotations:
+#     nginx.ingress.kubernetes.io/configuration-snippet: |
+#       # Redirect root to kiosk mode
+#       if ($request_uri = /) {
+#         rewrite ^/$ /?kiosk redirect;
+#       }
+#       # redirect admin and user-facing pages
+#       if ($request_uri ~ "^/(login|signup|admin|profile|org|dashboard|datasources|plugins|users|teams|playlists|alerting|explore|d/)") {
+#         return 301 /?kiosk;
+#       }
+#       
+# spec:
+#   ingressClassName: external
+# 
+#   tls:
+#   - hosts:
+#     - monitoring.jwschman.com
+#   rules:
+#   - host: monitoring.jwschman.com
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: external-grafana
+#             port:
+#               number: 80
 ---
-apiVersion: networking.k8s.io/v1
-kind: Ingress
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
-  name: external-grafana
+  name: external-monitoring
   namespace: external-monitoring
-  annotations:
-    nginx.ingress.kubernetes.io/configuration-snippet: |
-      # Redirect root to kiosk mode
-      if ($request_uri = /) {
-        rewrite ^/$ /?kiosk redirect;
-      }
-      # redirect admin and user-facing pages
-      if ($request_uri ~ "^/(login|signup|admin|profile|org|dashboard|datasources|plugins|users|teams|playlists|alerting|explore|d/)") {
-        return 301 /?kiosk;
-      }
-      
 spec:
-  ingressClassName: external
-
-  tls:
-  - hosts:
-    - monitoring.jwschman.com
+  parentRefs:
+    - name: external-gateway
+      namespace: traefik
+      kind: Gateway
+      group: gateway.networking.k8s.io
+  hostnames:
+    - "monitoring.jwschman.com"
   rules:
-  - host: monitoring.jwschman.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: external-grafana
-            port:
-              number: 80
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      filters:
+        # external grafana redirect middlewares
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: redirect-root-to-kiosk
+        - type: ExtensionRef
+          extensionRef:
+            group: traefik.io
+            kind: Middleware
+            name: redirect-admin-to-kiosk
+      backendRefs:
+        - name: external-grafana
+          port: 80
+          kind: Service
+          group: ''
+          weight: 1

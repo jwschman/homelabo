@@ -10,23 +10,19 @@ spec:
       repoURL: git@github.com:jwschman/argocd.git
       revision: HEAD
       directories:
-      - path: apps/media/*
       - path: apps/argocd
       - path: apps/nextcloud
       - path: apps/monitoring/*
       - path: apps/wordpress
       - path: apps/redmine
-      - path: apps/homepage
-      - path: apps/linkding
-      - path: apps/external-zero-trust/*
       - path: apps/gotify
-      - path: apps/commafeed
-      - path: apps/linkwarden
       - path: apps/paperless
       - path: apps/redis
       - path: apps/truenas-gotify-adapter
       - path: apps/freshrss
-      # - path: testing/*
+      - path: apps/redis-new
+      - path: apps/nextcloud-postgresql
+      - path: apps/external-monitoring/*
   template:
     metadata:
       name: '{{.path.basename}}'

@@ -10,7 +10,7 @@ redmine:
     type: ClusterIP
   
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: "internal"
     hostname: redmine.pawked.com
 

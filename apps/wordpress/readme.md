@@ -4,6 +4,10 @@ I use an internal only WordPress instance basically as a journal that I keep for
 
 ## Notes
 
-9/24/2025
+### 9/24/2025
 
 Migrated from Bitnami Helm chart to official images
+
+## 12/18/2025
+
+Migrate ingress to httproute

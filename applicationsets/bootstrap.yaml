@@ -8,7 +8,7 @@ spec:
   destination:
     server: https://kubernetes.default.svc
   source:
-    repoURL: git@github.com:jwschman/homelabo.git
+    repoURL: git@github.com:jwschman/argocd.git
     targetRevision: HEAD
     path: ./cluster-app-of-apps
   syncPolicy:

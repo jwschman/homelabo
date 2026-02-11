@@ -1,0 +1,410 @@
+kube-prometheus-stack:
+  ## Install Prometheus Operator CRDs
+  ##
+  crds:
+    enabled: true
+
+  ## Create default rules for monitoring the cluster
+  ##
+  defaultRules:
+    create: true
+    rules:
+      alertmanager: false
+      etcd: true
+      configReloaders: true
+      general: true
+      k8sContainerCpuUsageSecondsTotal: true
+      k8sContainerMemoryCache: true
+      k8sContainerMemoryRss: true
+      k8sContainerMemorySwap: true
+      k8sContainerResource: true
+      k8sContainerMemoryWorkingSetBytes: true
+      k8sPodOwner: true
+      kubeApiserverAvailability: true
+      kubeApiserverBurnrate: true
+      kubeApiserverHistogram: true
+      kubeApiserverSlos: true
+      kubeControllerManager: true
+      kubelet: true
+      kubeProxy: true
+      kubePrometheusGeneral: true
+      kubePrometheusNodeRecording: true
+      kubernetesApps: true
+      kubernetesResources: true
+      kubernetesStorage: true
+      kubernetesSystem: true
+      kubeSchedulerAlerting: true
+      kubeSchedulerRecording: true
+      kubeStateMetrics: true
+      network: true
+      node: true
+      nodeExporterAlerting: false
+      nodeExporterRecording: false
+      prometheus: true
+      prometheusOperator: true
+      windows: false
+
+  ##
+  global:
+    rbac:
+      create: true
+
+  ## Configuration for alertmanager
+  ## ref: https://prometheus.io/docs/alerting/alertmanager/
+  ##
+  alertmanager:
+    enabled: false
+
+  ## Using default values from https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+  ##
+  grafana:
+    enabled: false
+
+  ## Component scraping kube state metrics
+  ##
+  kubeStateMetrics:
+    enabled: true
+
+  ## Configuration for kube-state-metrics subchart
+  ##
+  kube-state-metrics:
+    namespaceOverride: ""
+    rbac:
+      create: true
+    releaseLabel: true
+
+    ## Enable scraping via kubernetes-service-endpoints
+    ## Disabled by default as we service monitor is enabled below
+    ##
+    prometheusScrape: false
+
+    prometheus:
+      monitor:
+
+        ## Enable scraping via service monitor
+        ## Disable to prevent duplication if you enable prometheusScrape above
+        ##
+        enabled: true
+
+        ## Scrape interval. If not set, the Prometheus default scrape interval is used.
+        ##
+        interval: ""
+
+        ## SampleLimit defines per-scrape limit on number of scraped samples that will be accepted.
+        ##
+        sampleLimit: 0
+
+        ## TargetLimit defines a limit on the number of scraped targets that will be accepted.
+        ##
+        targetLimit: 0
+
+        ## Per-scrape limit on number of labels that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+        ##
+        labelLimit: 0
+
+        ## Per-scrape limit on length of labels name that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+        ##
+        labelNameLengthLimit: 0
+
+        ## Per-scrape limit on length of labels value that will be accepted for a sample. Only valid in Prometheus versions 2.27.0 and newer.
+        ##
+        labelValueLengthLimit: 0
+
+        ## Scrape Timeout. If not set, the Prometheus default scrape timeout is used.
+        ##
+        scrapeTimeout: ""
+
+        ## proxyUrl: URL of a proxy that should be used for scraping.
+        ##
+        proxyUrl: ""
+
+        # Keep labels from scraped data, overriding server-side labels
+        ##
+        honorLabels: true
+
+        ## MetricRelabelConfigs to apply to samples after scraping, but before ingestion.
+        ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#relabelconfig
+        ##
+        metricRelabelings: []
+        # - action: keep
+        #   regex: 'kube_(daemonset|deployment|pod|namespace|node|statefulset).+'
+        #   sourceLabels: [__name__]
+
+        ## RelabelConfigs to apply to samples before scraping
+        ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#relabelconfig
+        ##
+        relabelings: []
+        # - sourceLabels: [__meta_kubernetes_pod_node_name]
+        #   separator: ;
+        #   regex: ^(.*)$
+        #   targetLabel: nodename
+        #   replacement: $1
+        #   action: replace
+
+    selfMonitor:
+      enabled: false
+
+  ## Deploy node exporter as a daemonset to all nodes
+  ##
+  nodeExporter:
+    enabled: true
+
+  ## Manages Prometheus and Alertmanager components
+  ##
+  prometheusOperator:
+    enabled: true
+
+    revisionHistoryLimit: 10
+
+    service:
+      annotations: {}
+      labels: {}
+      clusterIP: ""
+      ipDualStack:
+        enabled: false
+        ipFamilies: ["IPv6", "IPv4"]
+        ipFamilyPolicy: "PreferDualStack"
+
+    ## Resource limits & requests
+    ##
+    resources:
+      limits:
+        cpu: 200m
+        memory: 200Mi
+      requests:
+        cpu: 100m
+        memory: 100Mi
+
+    # Required for use in managed kubernetes clusters (such as AWS EKS) with custom CNI (such as calico),
+    # because control-plane managed by AWS cannot communicate with pods' IP CIDR and admission webhooks are not working
+    ##
+    hostNetwork: false
+
+    ##
+    image:
+      registry: quay.io
+      repository: prometheus-operator/prometheus-operator
+      # if not set appVersion field from Chart.yaml is used
+      tag: ""
+      sha: ""
+      pullPolicy: IfNotPresent
+
+    ## Prometheus-config-reloader
+    ##
+    prometheusConfigReloader:
+      image:
+        registry: quay.io
+        repository: prometheus-operator/prometheus-config-reloader
+        # if not set appVersion field from Chart.yaml is used
+        tag: ""
+        sha: ""
+
+      # add prometheus config reloader liveness and readiness probe. Default: false
+      enableProbe: false
+
+      # resource config for prometheusConfigReloader
+      resources: {}
+        # requests:
+        #   cpu: 200m
+        #   memory: 50Mi
+        # limits:
+        #   cpu: 200m
+        #   memory: 50Mi
+
+  ## Deploy a Prometheus instance
+  ##
+  prometheus:
+    enabled: true
+
+    ## Configuration for Prometheus service
+    ##
+    service:
+      enabled: true
+      annotations: {}
+      labels: {}
+      clusterIP: ""
+      ipDualStack:
+        enabled: false
+        ipFamilies: ["IPv6", "IPv4"]
+        ipFamilyPolicy: "PreferDualStack"
+
+      ## Port for Prometheus Service to listen on
+      ##
+      port: 9090
+
+      ## To be used with a proxy extraContainer port
+      targetPort: 9090
+
+      ## Port for Prometheus Reloader to listen on
+      ##
+      reloaderWebPort: 8080
+
+      ## List of IP addresses at which the Prometheus server service is available
+      ## Ref: https://kubernetes.io/docs/concepts/services-networking/service/#external-ips
+      ##
+      externalIPs: []
+
+      ## Port to expose on each node
+      ## Only used if service.type is 'NodePort'
+      ##
+      nodePort: 30090
+
+      ## Loadbalancer IP
+      ## Only use if service.type is "LoadBalancer"
+      loadBalancerIP: ""
+      loadBalancerSourceRanges: []
+
+      ## Denotes if this Service desires to route external traffic to node-local or cluster-wide endpoints
+      ##
+      externalTrafficPolicy: Cluster
+
+      ## Service type
+      ##
+      type: ClusterIP
+
+      ## Additional ports to open for Prometheus service
+      ##
+      additionalPorts: []
+      # additionalPorts:
+      # - name: oauth-proxy
+      #   port: 8081
+      #   targetPort: 8081
+      # - name: oauth-metrics
+      #   port: 8082
+      #   targetPort: 8082
+
+      ## Consider that all endpoints are considered "ready" even if the Pods themselves are not
+      ## Ref: https://kubernetes.io/docs/reference/kubernetes-api/service-resources/service-v1/#ServiceSpec
+      publishNotReadyAddresses: false
+
+      ## If you want to make sure that connections from a particular client are passed to the same Pod each time
+      ## Accepts 'ClientIP' or 'None'
+      ##
+      sessionAffinity: None
+
+      ## If you want to modify the ClientIP sessionAffinity timeout
+      ## The value must be >0 && <=86400(for 1 day) if ServiceAffinity == "ClientIP"
+      ##
+      sessionAffinityConfig:
+        clientIP:
+          timeoutSeconds: 10800
+
+    ingress:
+      enabled: false
+      ingressClassName: "internal"
+      hosts:
+        - prometheus.pawked.com
+      paths:
+        - /
+
+    ## Settings affecting prometheusSpec
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#prometheusspec
+    ##
+    prometheusSpec:
+
+      ## File to which scrape failures are logged.
+      ## Reloading the configuration will reopen the file.
+      ## Defaults to empty (disabled)
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api-reference/api.md#monitoring.coreos.com/v1.Prometheus
+      ##
+      scrapeFailureLogFile: ""
+
+      ## Interval between consecutive scrapes.
+      ## Defaults to 30s.
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
+      ##
+      scrapeInterval: ""
+
+      ## Number of seconds to wait for target to respond before erroring
+      ##
+      scrapeTimeout: ""
+
+
+      ## Sets version of Prometheus overriding the Prometheus version as derived
+      ## from the image tag. Useful in cases where the tag does not follow semver v2.
+      version: ""
+
+      ## Image of Prometheus.
+      ##
+      image:
+        registry: quay.io
+        repository: prometheus/prometheus
+        tag: v3.8.1
+        sha: ""
+        pullPolicy: IfNotPresent
+
+  
+      ## ConfigMaps is a list of ConfigMaps in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods.
+      ## The ConfigMaps are mounted into /etc/prometheus/configmaps/.
+      ##
+      configMaps: []
+
+      ## How long to retain metrics
+      ##
+      retention: 10d
+
+      ## Maximum size of metrics
+      ## Unit format should be in the form of "50GiB"
+      retentionSize: ""
+
+      ## Resource limits & requests
+      ##
+      resources:
+        requests:
+          cpu: 500m
+          memory: 2Gi
+        limits:
+          cpu: 2
+          memory: 4Gi
+
+      ## Prometheus StorageSpec for persistent data
+      ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/platform/storage.md
+      ##
+      storageSpec:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: truenas-nfs
+            # selector:
+            #   matchLabels:
+            #     app.kubernetes.io/name: prometheus-server-new
+            resources:
+              requests:
+                storage: 512Mi
+
+      ## AdditionalScrapeConfigs allows specifying additional Prometheus scrape configurations. Scrape configurations
+      ## are appended to the configurations generated by the Prometheus Operator. Job configurations must have the form
+      ## as specified in the official Prometheus documentation:
+      ## https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config. As scrape configs are
+      ## appended, the user is responsible to make sure it is valid. Note that using this feature may expose the possibility
+      ## to break upgrades of Prometheus. It is advised to review Prometheus release notes to ensure that no incompatible
+      ## scrape configs are going to break Prometheus after the upgrade.
+      ## AdditionalScrapeConfigs can be defined as a list or as a templated string.
+      ##
+      ## The scrape configuration example below will find master nodes, provided they have the name .*mst.*, relabel the
+      ## port to 2379 and allow etcd scraping provided it is running on all Kubernetes master nodes
+      ##
+      additionalScrapeConfigs:
+        - job_name: dousojin
+          honor_timestamps: true
+          track_timestamps_staleness: false
+          scrape_interval: 1m
+          scrape_timeout: 10s
+          scrape_protocols:
+          - OpenMetricsText1.0.0
+          - OpenMetricsText0.0.1
+          - PrometheusText1.0.0
+          - PrometheusText0.0.4
+          metrics_path: /metrics
+          scheme: http
+          enable_compression: true
+          follow_redirects: true
+          enable_http2: true
+          static_configs:
+          - targets:
+            - 192.168.1.149:9100
+
+        - job_name: shelly-exporter
+          scrape_interval: 15s
+          static_configs:
+          - targets:
+            - shelly-exporter.monitoring.svc.cluster.local:2112

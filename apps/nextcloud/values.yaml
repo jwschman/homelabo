@@ -10,7 +10,7 @@ nextcloud:
 
   ## Ingress config
   ingress:
-    enabled: true
+    enabled: false
     className: external
     hosts:
     - host: nextcloud.jwschman.com
@@ -23,6 +23,9 @@ nextcloud:
     path: /
     pathType: Prefix
     annotations:
+    # https://doc.traefik.io/traefik/reference/routing-configuration/kubernetes/ingress/
+      # traefik.ingress.kubernetes.io/router.entrypoints: external-web
+      # old ingress-nginx annotations
       nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
       nginx.ingress.kubernetes.io/x-forwarded-proto: "https"
@@ -74,14 +77,16 @@ nextcloud:
     ## Configs for Nextcloud's config.php (I think that's what it is called)
     configs:
       # Preserve source ip, force https, set maintenance window to start at 2AM, and set default phone region to JP
+
       proxy.config.php: |-
         <?php
         $CONFIG = array (
           'trusted_proxies' => array(
             0 => '127.0.0.1',
             1 => '10.0.0.0/8',
-            2 => '192.168.1.201',
+            2 => '192.168.1.204',
           ),
+
           'overwritehost' => 'nextcloud.jwschman.com',
           'overwriteprotocol' => 'https',
           'overwrite.cli.url' => 'https://nextcloud.jwschman.com',
@@ -184,7 +189,7 @@ nextcloud:
   ##
   service:
     type: ClusterIP
-    port: 8080
+    port: 80
 
   ## Liveness Probes
   ## Need to set these initial delays higher for first startup

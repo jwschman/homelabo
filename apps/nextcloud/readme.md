@@ -29,3 +29,11 @@ The readiness and liveness probes in values need to be set to a higher value tha
 ### 5/8/2025
 
 changed external secrets to new template
+
+### 9/19/2025
+
+Migraded Postgres database to Official Image.  That's all in the `templates/nextcloud-postgresql` directory
+
+### 12/18/2025
+
+Migrate ingress to httproute

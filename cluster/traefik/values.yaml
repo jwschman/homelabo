@@ -1,0 +1,124 @@
+traefik:
+  # Configure Network Ports and EntryPoints
+  # EntryPoints are the network listeners for incoming traffic.
+  ports:
+    # @schema additionalProperties: false
+    traefik:
+      port: 8080
+
+    web-ext:
+      port: 8888
+      redirections:
+        entryPoint:
+          to: websecure-ext
+          scheme: https
+          permanent: true
+      expose:
+        default: true
+      exposedPort: 8888
+      middlewares:
+        - traefik-external-ip-whitelist@kubernetescrd
+
+    websecure-ext:
+      port: 8444
+      expose:
+        default: true
+      exposedPort: 8444
+      middlewares:
+        - traefik-external-ip-whitelist@kubernetescrd
+
+    web:
+      port: 8000
+      expose:
+        default: true
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+      middlewares:
+        - traefik-internal-ip-whitelist@kubernetescrd
+
+    websecure:
+      expose:
+        default: true
+      port: 8443
+      middlewares:
+        - traefik-internal-ip-whitelist@kubernetescrd
+
+    metrics:
+      # -- When using hostNetwork, use another port to avoid conflict with node exporter:
+      # https://github.com/prometheus/prometheus/wiki/Default-port-allocations
+      port: 9111
+      # -- You may not want to expose the metrics port on production deployments.
+      # If you want to access it from outside your cluster,
+      # use `kubectl port-forward` or create a secure ingress
+      expose:
+        default: false
+      exposedPort: 9111
+      protocol: TCP
+
+  # Enables the dashboard in Secure Mode
+  api:
+    dashboard: true
+    insecure: false
+
+  ingressRoute:
+    dashboard:
+      enabled: true
+      matchRule: Host(`traefik.pawked.com`)
+      entryPoints:
+        - websecure
+
+  # We will route with Gateway API instead.
+  ingressClass:
+    enabled: false
+
+  # Enable Gateway API Provider & Disables the KubernetesIngress provider
+  # Providers tell Traefik where to find routing configuration.
+  providers:
+    kubernetesIngress:
+      enabled: false
+    kubernetesGateway:
+      enabled: true
+
+  ## Gateway Listeners
+  gateway:
+    enabled: false
+    listeners:
+      web:           # HTTP listener that matches entryPoint `web`
+        port: 8000
+        protocol: HTTP
+        namespacePolicy:
+          from: All
+
+      websecure:         # HTTPS listener that matches entryPoint `websecure`
+        port: 8443
+        protocol: HTTPS  # TLS terminates inside Traefik
+        namespacePolicy:
+          from: All
+        mode: Terminate
+        certificateRefs:    
+          - kind: Secret
+            name: traefik-pawked-wildcard-cert-secret
+            group: ""
+
+  logs:
+    general:
+      level: INFO
+    # This enables access logs, outputting them to Traefik's standard output by default. The [Access Logs Documentation](https://doc.traefik.io/traefik/observability/access-logs/) covers formatting, filtering, and output options.
+    access:
+      enabled: true
+
+  # Enables Prometheus for Metrics
+  metrics:
+    prometheus:
+      enabled: true
+  
+  service:
+    enabled: true
+    single: true
+    type: LoadBalancer
+    spec:
+      externalTrafficPolicy: Local
+      loadBalancerIP: "192.168.1.203"

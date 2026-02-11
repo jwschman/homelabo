@@ -1,0 +1,57 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: internal-gateway
+  namespace: traefik
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: web           # HTTP listener that matches entryPoint `web`
+      protocol: HTTP
+      port: 8000
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    - name: websecure         # HTTPS listener that matches entryPoint `websecure`
+      protocol: HTTPS     # TLS terminates inside Traefik
+      port: 8443
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:    
+          - kind: Secret
+            name: traefik-pawked-wildcard-cert-secret
+            group: ""
+            namespace: "traefik"
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: external-gateway
+  namespace: traefik
+spec:
+  gatewayClassName: traefik
+  listeners:
+    - name: web-ext           # HTTP listener that matches entryPoint `web`
+      protocol: HTTP
+      port: 8888
+      allowedRoutes:
+        namespaces:
+          from: All
+
+    - name: websecure-ext         # HTTPS listener that matches entryPoint `websecure`
+      protocol: HTTPS  # TLS terminates inside Traefik
+      port: 8444
+      allowedRoutes:
+        namespaces:
+          from: All
+      tls:
+        mode: Terminate
+        certificateRefs:    
+          - kind: Secret
+            name: traefik-jwschman-wildcard-cert-secret
+            group: ""
+            namespace: "traefik"

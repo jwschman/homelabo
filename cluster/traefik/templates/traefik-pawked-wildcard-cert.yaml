@@ -1,0 +1,27 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-pawked-wildcard-cert
+  namespace: traefik
+spec:
+  secretName: traefik-pawked-wildcard-cert-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.pawked.com"
+  - "pawked.com" 
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: traefik-jwschman-wildcard-cert
+  namespace: traefik
+spec:
+  secretName: traefik-jwschman-wildcard-cert-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  dnsNames:
+  - "*.jwschman.com"
+  - "jwschman.com" 

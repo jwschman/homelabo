@@ -11,6 +11,8 @@ grafana:
     GF_AUTH_OAUTH_AUTO_LOGIN: "true"
     GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH: "contains(groups, 'Grafana Admins') && 'Admin' || contains(groups, 'Grafana Editors') && 'Editor' || 'Viewer'"
     GF_SERVER_ROOT_URL: "https://grafana.pawked.com"
+    GF_AUTH_GENERIC_OAUTH_TLS_SKIP_VERIFY: "true"
+
 
   envValueFrom:
     GF_AUTH_GENERIC_OAUTH_CLIENT_ID:
@@ -29,7 +31,7 @@ grafana:
     type: Recreate
   
   ingress:
-    enabled: true
+    enabled: false
     ingressClassName: internal
     hosts:
       - grafana.pawked.com

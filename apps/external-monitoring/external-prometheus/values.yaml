@@ -7,7 +7,7 @@ prometheus:
     
     ## use internal ingress
     ingress:
-      enabled: true
+      enabled: false
       ingressClassName: "internal"
       hosts:
         - external-prometheus.pawked.com

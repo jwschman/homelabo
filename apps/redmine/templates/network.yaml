@@ -1,44 +1,43 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: gotify
-  namespace: gotify
+  name: redmine-svc
+  labels:
+    app: redmine
 spec:
   selector:
-    app: gotify
-  type: ClusterIP
+    app: redmine
   ports:
-  - protocol: TCP
-    port: 80
-    targetPort: 80
+    - port: 3000
+      targetPort: 3000
+      name: http
 # ---
 # apiVersion: networking.k8s.io/v1
 # kind: Ingress
 # metadata:
-#   name: gotify
-#   namespace: gotify
+#   name: redmine
 # spec:
 #   ingressClassName: internal
 #   tls:
 #   - hosts:
-#     - gotify.pawked.com
+#     - redmine.pawked.com
 #   rules:
-#   - host: gotify.pawked.com
+#   - host: redmine.pawked.com
 #     http:
 #       paths:
 #       - path: /
 #         pathType: Prefix
 #         backend:
 #           service:
-#             name: gotify
+#             name: redmine-svc
 #             port:
-#               number: 80
+#               number: 3000
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: gotify
-  namespace: gotify
+  name: redmine
+  namespace: redmine
 spec:
   parentRefs:
     - name: internal-gateway
@@ -46,15 +45,28 @@ spec:
       kind: Gateway
       group: gateway.networking.k8s.io
   hostnames:
-    - "gotify.pawked.com"
+    - "redmine.pawked.com"
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
       backendRefs:
-        - name: gotify
-          port: 80
+        - name: redmine-svc
+          port: 3000
           kind: Service
           group: ''
           weight: 1
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redmine-postgresql-svc
+  labels:
+    app: redmine-postgresql
+spec:
+  ports:
+  - port: 5432
+    name: tcp-postgres
+  selector:
+    app: redmine-postgresql
