@@ -1,0 +1,55 @@
+---
+# MariaDB service
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-wordpress-mariadb-svc
+  labels:
+    app: external-wordpress-mariadb
+spec:
+  ports:
+  - port: 3306
+    name: tcp-mariadb
+  selector:
+    app: external-wordpress-mariadb
+---
+# WordPress service
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-wordpress-wordpress-svc
+spec:
+  selector:
+    app: external-wordpress
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    # - name: https
+    #   port: 443
+    #   targetPort: 443
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: external-wordpress
+  namespace: external-wordpress
+spec:
+  parentRefs:
+    - name: external-gateway # change to internal for testing
+      namespace: traefik
+      kind: Gateway
+      group: gateway.networking.k8s.io
+  hostnames:
+    - "wordpress.jwschman.com"
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
+        - name: external-wordpress-wordpress-svc
+          port: 80
+          kind: Service
+          group: ''
+          weight: 1

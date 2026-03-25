@@ -1,0 +1,71 @@
+---
+## WordPress Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: external-wordpress
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: external-wordpress
+  template:
+    metadata:
+      labels:
+        app: external-wordpress
+    spec:
+      containers:
+      - name: wordpress
+        image: wordpress:6.9.4-apache
+        imagePullPolicy: IfNotPresent
+      
+        env:
+        # DB ENV
+        - name: WORDPRESS_DB_HOST
+          value: external-wordpress-mariadb-svc:3306
+        - name: WORDPRESS_DB_NAME
+          value: wordpress
+        - name: WORDPRESS_DB_USER
+          value: wordpress
+        - name: WORDPRESS_CONFIG_EXTRA
+          valueFrom:
+            configMapKeyRef:
+              name: external-wordpress-config
+              key: wp-config-extra.php
+
+        # Pull all other env from external secret (DB Password)
+        envFrom:
+        - secretRef:
+            name: external-wordpress-secrets
+
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 6
+          httpGet:
+            path: /
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: 750m
+            memory: 768Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /var/www/html/wp-content
+          name: external-wordpress-data
+      volumes:
+      - name: external-wordpress-data
+        persistentVolumeClaim:
+          claimName: external-wordpress-wordpress-data
+

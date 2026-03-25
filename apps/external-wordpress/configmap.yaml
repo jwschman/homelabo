@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: external-wordpress-config
+  namespace: external-wordpress
+data:
+  wp-config-extra.php: |
+    define('WP_HOME', 'https://wordpress.jwschman.com');
+    define('WP_SITEURL', 'https://wordpress.jwschman.com');

@@ -1,0 +1,49 @@
+---
+## MariaDB StatefulSet for External Wordpress
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: external-wordpress-mariadb
+spec:
+  selector:
+    matchLabels:
+      app: external-wordpress-mariadb 
+  serviceName: "external-wordpress-mariadb-svc"
+  replicas: 1 
+  minReadySeconds: 10 
+  template:
+    metadata:
+      labels:
+        app: external-wordpress-mariadb 
+    spec:
+      terminationGracePeriodSeconds: 10
+
+      containers:
+      - name: mariadb
+        image: mariadb:11.8
+        envFrom:
+          - secretRef:
+              name: external-wordpress-mariadb-secrets
+        ports:
+        - containerPort: 3306
+          name: tcp-mariadb
+
+        resources:
+          limits:
+            cpu: 375m
+            ephemeral-storage: 2Gi
+            memory: 384Mi
+          requests:
+            cpu: 250m
+            ephemeral-storage: 50Mi
+            memory: 256Mi
+
+        volumeMounts:
+        - name: external-wordpress-mariadb-data
+          mountPath: /var/lib/mysql
+
+      volumes:
+        - name: external-wordpress-mariadb-data
+          persistentVolumeClaim:
+            claimName: external-wordpress-mariadb-data
